@@ -1,3 +1,4 @@
+import ast
 def tobits(s):
 #from https://stackoverflow.com/questions/10237926/convert-string-to-list-of-bits-and-viceversa
     result = []
@@ -195,8 +196,6 @@ def crypto(word, initialKey):
 def decrypto(word, initialKey):
     #this entire thing is the same as crypto, but with the k0 and k1 positions flipped
     
-    
-    
     #initial permutation
     ip = initialPerm(word)
     #split the bits into left and right halfs
@@ -219,34 +218,85 @@ def decrypto(word, initialKey):
     
     #combine the 2 xors, and apply permutation
     inversePerm = [finalXor[3], finalXor[0], finalXor[2], newR[0], newR[2], finalXor[1], newR[3], newR[1]]
-    return inversePerm     
+    return inversePerm  
     
-def main():
-    initialKey = [1, 1, 0, 0, 1, 0, 1, 1, 1, 0]
-    words = input("Enter string to be encrypted: ")
+    
+def encrypt(words, initialKey):
     text = tobits(words)
-        
     #encrpyted list
     c = []
-    #decrpyted list
-    d = []
     for i in range(0,len(text),8):
        l = crypto(text[i:i+8], initialKey)
        c.append(l)
     
     #showing encrpyted
-    print("Encrypted as: ", end='')
-    for x in range(len(c)):
-        print(frombits(c[x]), end=' ')
-    print('')
+#    print("Encrypted as: ", end='')
+#    for x in range(len(c)):
+#        print(frombits(c[x]), end=' ')
+#    print('')
+    return c
+    
+def decrypt2(words, initialKey):
+    #decrpyted list
+    d = []
     
     #showing decrpyted
-    for j in range(0,len(c)):
-       t = decrypto(c[j], initialKey)
+    for j in range(0,len(words)):
+       t = decrypto(words[j], initialKey)
        d.append(frombits(t))
     empty = ""
     print("Decrypted as: ", empty.join(d))
 
+    return d
+    
+def decrypt(words, initialKey):
+    #decrpyted list
+    d = []
+    #print(words[0])
+    #showing decrpyted
+    #print(len(words))
+    for j in range(0,len(words)):
+       d += decrypto(words[j], initialKey)
+       #print("t = : ", t)
+       #d.append(t)
+       #print("d = : ", d)
+    #empty = ""
+    #print("Decrypted as: ", empty.join(d))
+#    print("d = ", d)
+#    print("d[0] = ", d[0])
+#    print(frombits(d[0]))
+    
+    
+    #qq = ast.parse(d[0],mode="eval")
+    #print(qq)
+#    for i in range(len(d)):
+#        test2 = ast.literal_eval(d[i])
+#        print(test2)
+#    print(d)
+#
+#    test = ast.literal_eval(d)
+#    print(test)
+
+#    kk = 0
+#    ee = []
+#    for i in range(0,len(d),8):
+#        ee+=frombits(d[i:i+8])
+#        kk+=1
+#    print(ee)
+#    rr = ast.literal_eval(ee)
+    back = frombits(d)
+    return ast.literal_eval(back)
+    
+def main():
+    initialKey = [1, 1, 0, 0, 1, 0, 1, 1, 1, 0]
+    #words = input("Enter string to be encrypted: ")
+    word = ["hi", [7,"penelope"]]
+    
+    test = encrypt(word.__str__(), initialKey)
+    test2 = decrypt2(test, initialKey)
+    print(test2[0])
+
+    
     
     
 if __name__== "__main__":

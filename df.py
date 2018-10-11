@@ -5,7 +5,6 @@ Created on Wed Oct 10 17:15:00 2018
 @author: Tommy
 """
 
-import numpy
 import random
 import sympy
 import hw1
@@ -47,11 +46,8 @@ def diff_hell():
     
     #this part sucked to figure out
     AA = field(sympy.div(field(resultB**privateA), modu, domain = 'QQ')[1])
-    BB = field(sympy.div(field(resultA**privateB), modu, domain = 'QQ')[1])
-    #print(AA)
-#    print(BB)
-#    print(privateA)
-#    print(privateB)
+   #BB = field(sympy.div(field(resultA**privateB), modu, domain = 'QQ')[1])
+  
     key = AA.all_coeffs()
     key = [0]*(10-len(key)) + key
     return key
@@ -63,7 +59,6 @@ def main():
     for i in range(0, 10):
         Kab.append(random.randint(0,1))
     
-    #print(Kab)    
     #get Kas and Kbs
     sharedAS = diff_hell()
     sharedBS = diff_hell()
@@ -79,56 +74,56 @@ def main():
     #bob sends alice her id, and new nonce
     bobNonce = generate_nonce(8)
     fixes = [alice, bobNonce]
-    fixesEncr = hw1.tobits(fixes.__str__())
-    #
-    fixesEncr = hw1.crypto(fixesEncr, sharedBS)
+
+    bobFix = hw1.encrypt(fixes.__str__(), sharedBS)
+    #print(bobFix)    
     
+    #alice generates nonce for the server
     nOne = generate_nonce(8)
-    #send alice id, bob id, nonce1, and bobs encrypted fix to server
-    
+
+    # alice sends alice id, bob id, nonce1, and bobs encrypted fix to server
+    alToSer = [alice, bob, nOne, bobFix]    
     
     #server decrypts bobs list and adds the session key Kab
-    temp = hw1.decrypto(fixesEncr, sharedBS)
-    temp.append(Kab)
-    #reencrypt bob
-    temp = hw1.tobits(temp.__str__())
-    #sned message from server to alice
-    toAlice = [nOne, bob, Kab, temp]
-    toAliceEncr = hw1.crypto(hw1.tobits(toAlice.__str__()),sharedAS)
+    tDec = hw1.decrypt(bobFix, sharedBS)
+    
+    tDec.append(Kab)
+
+    #reencrypt bobs part
+    newBob = hw1.encrypt(tDec.__str__(), sharedBS)
+    
+    #then re-encrypt alices part and send it to her
+    servToAlice = hw1.encrypt([nOne, bob, Kab, newBob].__str__(), sharedAS)
+    
     
     #decrypt alice
-    aliceMessage = hw1.decrypto(toAliceEncr, sharedAS)
-    #may need to use from bit to string method
+    aFromS = hw1.decrypt(servToAlice, sharedAS)
     
+    #may need to use from bit to string method
     #alice sends bob the shared key Kab and alice id
-    toBob = aliceMessage[3]
+    toBob = aFromS[3]
+
 
     #bob decrpyts and verifies
-    bobMessage = hw1.decrypto(toBob, sharedBS)
+    bobMessage = hw1.decrypt(toBob, sharedBS)
     #should be alice id, nonce, then Kab
 
     #bob makes a new nonce, encrypts it, and sends it to alice
     nTwo = generate_nonce(8)
-    backAlice = hw1.crypto(hw1.tobits(nTwo.__str__()), bobMessage[2])
+    backAlice = hw1.encrypt(nTwo.__str__(), bobMessage[2])
     
     #alice decrpyts, then subtracts 1, then re-encrypts and sends it to bob
-    aliceFin = hw1.decrypto(backAlice, Kab)
+    aliceFin = hw1.decrypt(backAlice, Kab)
     aliceFin = aliceFin-1
-    bobFin = hw1.crypto(hw1.tobits(aliceFin.__str__()),Kab)
-    #bob then decrpts and verifies
-    bobVerify = hw1.decrypto(bobFin, Kab)
     
-    if bobVerify == (nTwo-1):
+    bobFin = hw1.encrypt(aliceFin.__str__(),Kab)
+    #bob then decrpts and verifies
+    bobVerify = hw1.decrypt(bobFin, Kab)
+    
+    if bobVerify == (int(nTwo)-1):
+        print("Job Done!")
         return 1
     
-    
-    
-#    temp = [Kab, alice]
-#
-#    temp1 = hw1.tobits(temp.__str__())
-#    #print(temp.__str__())
-#    b1 = hw1.crypto(temp1, sharedBS)
-        
 if __name__ == "__main__":
     main()
     
